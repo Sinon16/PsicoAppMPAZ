@@ -16,7 +16,7 @@ fun AppNavegar(
         startDestination = "login",
         modifier = modifier
     ) {
-        // --- PANTALLAS PROGRAMADAS ---
+        // --- PANTALLAS TEMPORALES EN CONSTRUCCIÓN ---
         composable("login") {
             LoginScreen(
                 onLoginExitosoPsico = { navController.navigate("psico_home") },
@@ -33,7 +33,6 @@ fun AppNavegar(
             )
         }
 
-        // --- PANTALLAS TEMPORALES EN CONSTRUCCIÓN ---
         composable("estudiante_home") {
             EstudianteHomeScreen(
                 onIniciarTest = { navController.navigate("estudiante_test") }

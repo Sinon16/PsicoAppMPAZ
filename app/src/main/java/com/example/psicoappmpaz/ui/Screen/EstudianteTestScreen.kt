@@ -4,5 +4,5 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun EstudianteTestScreen(onFinalizar: () -> Unit) {
-    EnConstruccionScreen(nombrePantalla = "Responder Test Supervisado", onVolver = onFinalizar)
+    EnConstruccionScreen(nombrePantalla = "Responder Testeo Supervisado", onVolver = onFinalizar)
 }

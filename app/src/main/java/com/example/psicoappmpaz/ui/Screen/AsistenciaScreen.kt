@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun AsistenciaScreen(
-    onGuardar: () -> Unit = {}
+    onVolver: () -> Unit = {}
 ){
     Column(
         modifier = Modifier
@@ -98,7 +98,7 @@ fun AsistenciaScreen(
 
         Spacer(modifier = Modifier.weight(1f))
         Button(
-            onClick = onGuardar,
+            onClick = onVolver,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(text = "Guardar")

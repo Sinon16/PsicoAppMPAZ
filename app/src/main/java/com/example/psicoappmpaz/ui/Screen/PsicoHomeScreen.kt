@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.psicoappmpaz.model.Usuario
+import com.example.psicoappmpaz.ui.components.AppBottomBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -22,10 +22,9 @@ fun PsicoHomeScreen(
     onVerDetalle: (Int) -> Unit,
     onIrAsistencia: () -> Unit,
     onIrEvaluaciones: () -> Unit,
+    onIrPerfil: () -> Unit,
     onCerrarSesion: () -> Unit
 ) {
-    var itemNavegacionSeleccionado by remember { mutableIntStateOf(0) }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -49,7 +48,6 @@ fun PsicoHomeScreen(
                     actionIconContentColor = Color.White
                 ),
                 actions = {
-                    // Botón para Ir a Asistencia
                     IconButton(onClick = onIrAsistencia) {
                         Icon(
                             imageVector = Icons.Default.CalendarMonth,
@@ -57,7 +55,6 @@ fun PsicoHomeScreen(
                             tint = Color.White
                         )
                     }
-                    // Botón Reemplazado: Cerrar Sesión
                     IconButton(onClick = onCerrarSesion) {
                         Icon(
                             imageVector = Icons.Default.ExitToApp,
@@ -69,41 +66,15 @@ fun PsicoHomeScreen(
             )
         },
         bottomBar = {
-            NavigationBar(
-                modifier = Modifier.height(60.dp),
-                windowInsets = WindowInsets(0.dp)
-            ) {
-                NavigationBarItem(
-                    selected = itemNavegacionSeleccionado == 0,
-                    onClick = { itemNavegacionSeleccionado = 0 },
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Inicio") },
-                    label = { Text("Inicio") }
-                )
-                NavigationBarItem(
-                    selected = itemNavegacionSeleccionado == 1,
-                    onClick = {
-                        itemNavegacionSeleccionado = 1
-                        onIrEvaluaciones()
-                    },
-                    icon = { Icon(Icons.Default.Assignment, contentDescription = "Evaluaciones") },
-                    label = { Text("Evaluaciones") }
-                )
-                NavigationBarItem(
-                    selected = itemNavegacionSeleccionado == 2,
-                    onClick = {
-                        itemNavegacionSeleccionado = 2
-                        onIrAsistencia()
-                    },
-                    icon = { Icon(Icons.Default.Group, contentDescription = "Asistencia") },
-                    label = { Text("Asistencia") }
-                )
-                NavigationBarItem(
-                    selected = itemNavegacionSeleccionado == 3,
-                    onClick = { itemNavegacionSeleccionado = 3 },
-                    icon = { Icon(Icons.Default.Person, contentDescription = "Perfil") },
-                    label = { Text("Perfil") }
-                )
-            }
+            AppBottomBar(
+                itemSeleccionado = 0,
+                rolUsuario = "PSICOLOGO",
+                nombreUsuario = nombreUsuario,
+                onNavegarInicio = { /* Ya estamos en inicio */ },
+                onNavegarEvaluaciones = onIrEvaluaciones,
+                onNavegarAsistencia = onIrAsistencia,
+                onNavegarPerfil = onIrPerfil
+            )
         }
     ) { innerPadding ->
         LazyColumn(
@@ -133,7 +104,7 @@ fun PsicoHomeScreen(
                 )
             }
 
-            // 2. Tarjetas de Resumen (En curso / Completadas)
+            // 2. Tarjetas de Resumen
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -203,7 +174,7 @@ fun PsicoHomeScreen(
                 }
             }
 
-            // 3. crear usuario temporal
+            // 3. Crear Usuario Temporal
             item {
                 Button(
                     onClick = onCrearAplicacion,
@@ -246,7 +217,7 @@ fun PsicoHomeScreen(
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
-                    TextButton(onClick = { onVerDetalle(118) }) {
+                    TextButton(onClick = onIrEvaluaciones) {
                         Text("Ver todas")
                     }
                 }

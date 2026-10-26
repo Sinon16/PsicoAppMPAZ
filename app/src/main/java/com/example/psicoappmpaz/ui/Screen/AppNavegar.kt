@@ -51,8 +51,10 @@ fun AppNavegar(
                 nombreUsuario = nombreDecodificado,
                 onCrearAplicacion = { navController.navigate("crear_aplicacion") },
                 onVerDetalle = { idApp -> navController.navigate("detalle_resultado/$idApp") },
-                onIrAsistencia = { navController.navigate("asistencia") },
-                onIrEvaluaciones = { navController.navigate("evaluaciones") },
+                // Construye correctamente las rutas con rol y el nombre codificado
+                onIrAsistencia = { navController.navigate("asistencia/PSICOLOGO/$nombreRaw") },
+                onIrEvaluaciones = { navController.navigate("evaluaciones/PSICOLOGO/$nombreRaw") },
+                onIrPerfil = { navController.navigate("perfil/PSICOLOGO/$nombreRaw") },
                 onCerrarSesion = {
                     navController.navigate("login") {
                         popUpTo("login") { inclusive = true }
@@ -94,14 +96,57 @@ fun AppNavegar(
             )
         }
 
-        composable("asistencia") {
+        // --- RUTAS CON BARRA DE NAVEGACIÓN ---
+        composable("asistencia/{rolUsuario}/{nombreUsuario}") { backStackEntry ->
+            val rol = backStackEntry.arguments?.getString("rolUsuario") ?: "PSICOLOGO"
+            val nombreRaw = backStackEntry.arguments?.getString("nombreUsuario") ?: ""
+            val nombre = URLDecoder.decode(nombreRaw, StandardCharsets.UTF_8.toString())
+
             AsistenciaScreen(
+                rolUsuario = rol,
+                nombreUsuario = nombre,
+                onIrInicio = {
+                    val destino = if (rol == "PROFESOR") "profesor_home/$nombreRaw" else "psico_home/$nombreRaw"
+                    navController.navigate(destino) { popUpTo("login") { inclusive = false } }
+                },
+                onIrEvaluaciones = { navController.navigate("evaluaciones/$rol/$nombreRaw") },
+                onIrPerfil = { navController.navigate("perfil/$rol/$nombreRaw") },
                 onVolver = { navController.popBackStack() }
             )
         }
 
-        composable("evaluaciones") {
+        composable("evaluaciones/{rolUsuario}/{nombreUsuario}") { backStackEntry ->
+            val rol = backStackEntry.arguments?.getString("rolUsuario") ?: "PSICOLOGO"
+            val nombreRaw = backStackEntry.arguments?.getString("nombreUsuario") ?: ""
+            val nombre = URLDecoder.decode(nombreRaw, StandardCharsets.UTF_8.toString())
+
             EvaluacionesScreen(
+                rolUsuario = rol,
+                nombreUsuario = nombre,
+                onIrInicio = {
+                    val destino = if (rol == "PROFESOR") "profesor_home/$nombreRaw" else "psico_home/$nombreRaw"
+                    navController.navigate(destino) { popUpTo("login") { inclusive = false } }
+                },
+                onIrAsistencia = { navController.navigate("asistencia/$rol/$nombreRaw") },
+                onIrPerfil = { navController.navigate("perfil/$rol/$nombreRaw") },
+                onVolver = { navController.popBackStack() }
+            )
+        }
+
+        composable("perfil/{rolUsuario}/{nombreUsuario}") { backStackEntry ->
+            val rol = backStackEntry.arguments?.getString("rolUsuario") ?: "PSICOLOGO"
+            val nombreRaw = backStackEntry.arguments?.getString("nombreUsuario") ?: ""
+            val nombre = URLDecoder.decode(nombreRaw, StandardCharsets.UTF_8.toString())
+
+            PerfilScreen(
+                rolUsuario = rol,
+                nombreUsuario = nombre,
+                onIrInicio = {
+                    val destino = if (rol == "PROFESOR") "profesor_home/$nombreRaw" else "psico_home/$nombreRaw"
+                    navController.navigate(destino) { popUpTo("login") { inclusive = false } }
+                },
+                onIrEvaluaciones = { navController.navigate("evaluaciones/$rol/$nombreRaw") },
+                onIrAsistencia = { navController.navigate("asistencia/$rol/$nombreRaw") },
                 onVolver = { navController.popBackStack() }
             )
         }

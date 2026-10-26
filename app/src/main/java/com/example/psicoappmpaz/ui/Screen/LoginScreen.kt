@@ -1,36 +1,32 @@
 package com.example.psicoappmpaz.ui.screen
 
-import androidx.compose.runtime.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun LoginScreen(
-    onLoginExitosoPsico: () -> Unit,
-    onLoginExitosoProfe: () -> Unit,
-    onIngresoEstudiante: () -> Unit
+    onLoginExitosoPsico: (String) -> Unit,
+    onLoginExitosoProfe: (String) -> Unit,
+    onIngresoEstudiante: () -> Unit,
+    viewModel: LoginViewModel = viewModel()
 ) {
-    var tabSeleccionada by remember { mutableIntStateOf(0) }
-    var usuarioText by remember { mutableStateOf("") }
-    var passwordText by remember { mutableStateOf("") }
-    var codigoEstudiante by remember { mutableStateOf("") }
-    var mensajeError by remember { mutableStateOf("") }
-
     Surface(
-        modifier = Modifier.
-        fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize().padding(24.dp),
+                .fillMaxSize()
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -48,67 +44,71 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-
-            // Seleccionar modo de ingreso
-
-            TabRow(selectedTabIndex = tabSeleccionada) {
+            TabRow(selectedTabIndex = viewModel.tabSeleccionada) {
                 Tab(
-                    selected = tabSeleccionada == 0,
-                    onClick = {tabSeleccionada = 0; mensajeError =""},
-                    text = {Text("Profesional (BD)")}
+                    selected = viewModel.tabSeleccionada == 0,
+                    onClick = { viewModel.tabSeleccionada = 0; viewModel.mensajeError = "" },
+                    text = { Text("Profesional (BD)") }
                 )
                 Tab(
-                    selected = tabSeleccionada == 1,
-                    onClick = {tabSeleccionada = 1; mensajeError =""},
-                    text = {Text("Estudiante (Código)")}
+                    selected = viewModel.tabSeleccionada == 1,
+                    onClick = { viewModel.tabSeleccionada = 1; viewModel.mensajeError = "" },
+                    text = { Text("Estudiante (Código)") }
                 )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            if (tabSeleccionada == 0) {
-                // --- INGRESO PROFESIONAL CON CREDENCIALES DE BD ---
+            if (viewModel.tabSeleccionada == 0) {
                 OutlinedTextField(
-                    value = usuarioText,
-                    onValueChange = { usuarioText = it },
-                    label = { Text("Usuario (psico1 / profe1)") },
+                    value = viewModel.usuarioText,
+                    onValueChange = { viewModel.usuarioText = it },
+                    label = { Text("Usuario") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    enabled = !viewModel.cargando
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 OutlinedTextField(
-                    value = passwordText,
-                    onValueChange = { passwordText = it },
-                    label = { Text("Contraseña (123)") },
+                    value = viewModel.passwordText,
+                    onValueChange = { viewModel.passwordText = it },
+                    label = { Text("Contraseña") },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    enabled = !viewModel.cargando
                 )
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Button(
                     onClick = {
-                        // Simulación de login con BD local Room
-                        if (usuarioText == "psico1" && passwordText == "123") {
-                            onLoginExitosoPsico()
-                        } else if (usuarioText == "profe1" && passwordText == "123") {
-                            onLoginExitosoProfe()
-                        } else {
-                            mensajeError = "Credenciales inválidas. Usa psico1/123 o profe1/123"
-                        }
+                        viewModel.loginProfesional(
+                            onSuccessPsico = { nombreUsuario -> onLoginExitosoPsico(nombreUsuario) },
+                            onSuccessProfe = { nombreUsuario -> onLoginExitosoProfe(nombreUsuario) }
+                        )
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !viewModel.cargando
                 ) {
-                    Text("Ingresar al Sistema PIE")
+                    if (viewModel.cargando) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Ingresar al Sistema PIE")
+                    }
                 }
             } else {
-                // --- INGRESO ESTUDIANTE CON CÓDIGO TEMPORAL ---
                 OutlinedTextField(
-                    value = codigoEstudiante,
-                    onValueChange = { codigoEstudiante = it },
+                    value = viewModel.codigoEstudiante,
+                    onValueChange = { viewModel.codigoEstudiante = it },
                     label = { Text("Código Temporal (Ej: EST-101)") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    enabled = !viewModel.cargando
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -120,24 +120,33 @@ fun LoginScreen(
 
                 Button(
                     onClick = {
-                        if (codigoEstudiante.isNotBlank()) {
-                            onIngresoEstudiante()
-                        } else {
-                            mensajeError = "Ingresa tu código de 6 dígitos"
-                        }
+                        viewModel.loginEstudiante(
+                            onSuccessEstudiante = onIngresoEstudiante
+                        )
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !viewModel.cargando
                 ) {
-                    Text("Entrar como Estudiante")
+                    if (viewModel.cargando) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Entrar como Estudiante")
+                    }
                 }
             }
 
-            if (mensajeError.isNotEmpty()) {
+            if (viewModel.mensajeError.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(text = mensajeError, color = MaterialTheme.colorScheme.error)
+                Text(
+                    text = viewModel.mensajeError,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
     }
-
-
 }

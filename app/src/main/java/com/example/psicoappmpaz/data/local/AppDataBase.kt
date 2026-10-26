@@ -86,6 +86,17 @@ abstract class AppDataBase : RoomDatabase() {
                         estado = "Disponible"
                     )
                 )
+
+                db.aplicacionDao().crearAplicacion(
+                    AplicacionEntity(
+                        codigoTemporal = "EST-101",
+                        idEstudianteFicticio = 1,
+                        idCuestionario = 1,
+                        estado = "PENDIENTE",
+                        fechaInicio = "2026-10-25 10:00",
+                        usuarioResponsable = "psico1"
+                    )
+                )
             }
         }
     }

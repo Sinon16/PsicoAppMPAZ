@@ -9,17 +9,22 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.psicoappmpaz.model.Usuario
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PsicoHomeScreen(
+    nombreUsuario: String = "Defecto",
     onCrearAplicacion: () -> Unit,
     onVerDetalle: (Int) -> Unit,
-    onIrAsistencia: () -> Unit
+    onIrAsistencia: () -> Unit,
+    onIrEvaluaciones: () -> Unit,
+    onCerrarSesion: () -> Unit
 ) {
-    var mostrarDialogoSincronizacion by remember { mutableStateOf(false) }
+    var itemNavegacionSeleccionado by remember { mutableIntStateOf(0) }
 
     Scaffold(
         topBar = {
@@ -34,29 +39,71 @@ fun PsicoHomeScreen(
                         Text(
                             text = "Escuela Escritora Marcela Paz",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.outline
+                            color = Color.White.copy(alpha = 0.8f)
                         )
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = Color.White,
+                    actionIconContentColor = Color.White
+                ),
                 actions = {
-                    // Botón para simular sincronización con servidor remoto
-                    IconButton(onClick = { mostrarDialogoSincronizacion = true }) {
-                        Icon(
-                            imageVector = Icons.Default.CloudSync,
-                            contentDescription = "Sincronizar Cloud",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    // Botón para ir al módulo de Asistencia
+                    // Botón para Ir a Asistencia
                     IconButton(onClick = onIrAsistencia) {
                         Icon(
-                            imageVector = Icons.Default.HowToReg,
+                            imageVector = Icons.Default.CalendarMonth,
                             contentDescription = "Asistencia",
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = Color.White
+                        )
+                    }
+                    // Botón Reemplazado: Cerrar Sesión
+                    IconButton(onClick = onCerrarSesion) {
+                        Icon(
+                            imageVector = Icons.Default.ExitToApp,
+                            contentDescription = "Cerrar Sesión",
+                            tint = Color.White
                         )
                     }
                 }
             )
+        },
+        bottomBar = {
+            NavigationBar(
+                modifier = Modifier.height(60.dp),
+                windowInsets = WindowInsets(0.dp)
+            ) {
+                NavigationBarItem(
+                    selected = itemNavegacionSeleccionado == 0,
+                    onClick = { itemNavegacionSeleccionado = 0 },
+                    icon = { Icon(Icons.Default.Home, contentDescription = "Inicio") },
+                    label = { Text("Inicio") }
+                )
+                NavigationBarItem(
+                    selected = itemNavegacionSeleccionado == 1,
+                    onClick = {
+                        itemNavegacionSeleccionado = 1
+                        onIrEvaluaciones()
+                    },
+                    icon = { Icon(Icons.Default.Assignment, contentDescription = "Evaluaciones") },
+                    label = { Text("Evaluaciones") }
+                )
+                NavigationBarItem(
+                    selected = itemNavegacionSeleccionado == 2,
+                    onClick = {
+                        itemNavegacionSeleccionado = 2
+                        onIrAsistencia()
+                    },
+                    icon = { Icon(Icons.Default.Group, contentDescription = "Asistencia") },
+                    label = { Text("Asistencia") }
+                )
+                NavigationBarItem(
+                    selected = itemNavegacionSeleccionado == 3,
+                    onClick = { itemNavegacionSeleccionado = 3 },
+                    icon = { Icon(Icons.Default.Person, contentDescription = "Perfil") },
+                    label = { Text("Perfil") }
+                )
+            }
         }
     ) { innerPadding ->
         LazyColumn(
@@ -66,7 +113,7 @@ fun PsicoHomeScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 1. Cabecera de Bienvenida
+            // 1. Cabecera
             item {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
@@ -75,7 +122,7 @@ fun PsicoHomeScreen(
                     color = MaterialTheme.colorScheme.outline
                 )
                 Text(
-                    text = "Hola, Carolina 👋",
+                    text = "Hola, $nombreUsuario 👋",
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -86,7 +133,7 @@ fun PsicoHomeScreen(
                 )
             }
 
-            // 2. Tarjetas de Resumen
+            // 2. Tarjetas de Resumen (En curso / Completadas)
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -119,10 +166,7 @@ fun PsicoHomeScreen(
                                 style = MaterialTheme.typography.headlineLarge,
                                 fontWeight = FontWeight.Bold
                             )
-                            Text(
-                                text = "evaluaciones",
-                                style = MaterialTheme.typography.bodySmall
-                            )
+                            Text(text = "evaluaciones", style = MaterialTheme.typography.bodySmall)
                         }
                     }
 
@@ -153,43 +197,62 @@ fun PsicoHomeScreen(
                                 style = MaterialTheme.typography.headlineLarge,
                                 fontWeight = FontWeight.Bold
                             )
-                            Text(
-                                text = "evaluaciones",
-                                style = MaterialTheme.typography.bodySmall
-                            )
+                            Text(text = "evaluaciones", style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
             }
 
-            // 3. Botón de Acción Principal
+            // 3. crear usuario temporal
             item {
                 Button(
                     onClick = onCrearAplicacion,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp)
+                        .height(54.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ),
+                    shape = MaterialTheme.shapes.medium
                 ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Asignar nueva evaluación",
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PersonAdd,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Crear Alumno Temporal",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
 
-            // 4. Sección de Evaluaciones Recientes
+            // 4. Últimas Evaluaciones
             item {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Evaluaciones recientes",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Últimas evaluaciones",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    TextButton(onClick = { onVerDetalle(118) }) {
+                        Text("Ver todas")
+                    }
+                }
             }
 
-            // Lista estática de prueba
+            // Lista de elementos recientes
             items(listaEvaluacionesDemo) { eval ->
                 ElevatedCard(
                     onClick = { onVerDetalle(eval.id) },
@@ -203,79 +266,48 @@ fun PsicoHomeScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = eval.estudiante,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                // Tag de estado
-                                Surface(
-                                    color = if (eval.estado == "Completada")
-                                        MaterialTheme.colorScheme.primaryContainer
-                                    else
-                                        MaterialTheme.colorScheme.surfaceVariant,
-                                    shape = MaterialTheme.shapes.small
-                                ) {
-                                    Text(
-                                        text = eval.estado,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = eval.curso,
+                                text = eval.test,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "${eval.curso} • ${eval.fecha}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.outline
                             )
+                        }
+                        Surface(
+                            color = if (eval.estado == "Completada")
+                                MaterialTheme.colorScheme.primaryContainer
+                            else
+                                MaterialTheme.colorScheme.surfaceVariant,
+                            shape = MaterialTheme.shapes.small
+                        ) {
                             Text(
-                                text = eval.test,
-                                style = MaterialTheme.typography.bodyMedium
+                                text = eval.estado,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                style = MaterialTheme.typography.labelSmall
                             )
                         }
-                        Icon(
-                            imageVector = Icons.Default.ChevronRight,
-                            contentDescription = "Ver detalles",
-                            tint = MaterialTheme.colorScheme.outline
-                        )
                     }
                 }
             }
         }
     }
-
-    // Modal de Advertencia de Sincronización Remota (Cumple con requisito de módulo en construcción)
-    if (mostrarDialogoSincronizacion) {
-        AlertDialog(
-            onDismissRequest = { mostrarDialogoSincronizacion = false },
-            icon = { Icon(Icons.Default.CloudOff, contentDescription = null) },
-            title = { Text("Sincronización Cloud") },
-            text = {
-                Text("Actualmente la aplicación opera en Modo Local (Offline). Las respuestas están respaldadas de forma segura en la base de datos Room del dispositivo.")
-            },
-            confirmButton = {
-                TextButton(onClick = { mostrarDialogoSincronizacion = false }) {
-                    Text("Entendido")
-                }
-            }
-        )
-    }
 }
 
-// Datos ficticios
 private data class EvalDemo(
     val id: Int,
-    val estudiante: String,
-    val curso: String,
     val test: String,
+    val curso: String,
+    val fecha: String,
     val estado: String
 )
 
 private val listaEvaluacionesDemo = listOf(
-    EvalDemo(118, "Estudiante #118", "4° Básico • Sección B", "Cuestionario Educativo A", "Completada"),
-    EvalDemo(124, "Estudiante #124", "3° Básico • Sección A", "Escala de Bienestar Escolar", "En curso"),
-    EvalDemo(130, "Estudiante #130", "5° Básico • Sección A", "Cuestionario Educativo A", "Completada")
+    EvalDemo(118, "Evaluación de Lenguaje", "4° Básico A", "12 may. 2025", "En curso"),
+    EvalDemo(124, "Evaluación Socioemocional", "5° Básico B", "10 may. 2025", "Completada"),
+    EvalDemo(130, "Seguimiento Individual", "3° Básico A", "8 may. 2025", "En curso")
 )

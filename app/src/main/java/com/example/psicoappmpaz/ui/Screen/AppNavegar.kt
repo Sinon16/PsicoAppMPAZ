@@ -90,7 +90,11 @@ fun AppNavegar(
 
         composable("estudiante_test") {
             EstudianteTestScreen(
-                onFinalizar = { navController.popBackStack("login", inclusive = false) }
+                onFinalizar = {
+                    navController.navigate("login") {
+                        popUpTo("estudiante_home") { inclusive = true }
+                    }
+                }
             )
         }
 

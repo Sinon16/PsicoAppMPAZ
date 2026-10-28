@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -104,7 +103,7 @@ fun PerfilScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = nombreUsuario.ifBlank { "Usuario PIE" },
+                        text = if (nombreUsuario.isNotEmpty()) nombreUsuario else "Usuario PIE",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -189,20 +188,6 @@ fun PerfilScreen(
                         )
                     }
                 }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // 4. Botón para volver al Inicio
-            Button(
-                onClick = onIrInicio,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-            ) {
-                Icon(Icons.Default.Home, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "Volver al Inicio", style = MaterialTheme.typography.titleMedium)
             }
         }
     }

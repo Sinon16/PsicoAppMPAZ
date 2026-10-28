@@ -1,90 +1,138 @@
 package com.example.psicoappmpaz.ui.screen
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EstudianteTestScreen(
     onFinalizar: () -> Unit = {}
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-    ) {
-        Text(
-            text = "Pregunta 1 de 10",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+    val preguntas = listOf(
+        "¿Cómo te sientes cuando llegas a la escuela?",
+        "¿Cómo te sientes al aprender algo nuevo?",
+        "¿Cómo te sientes cuando realizas trabajos en grupo?",
+        "¿Cómo te sientes cuando participas en clase?",
+        "¿Cómo te sientes al terminar tu día en la escuela?"
+    )
 
-        Text(
-            text = "¿Cómo te sientes cuando estas en la escuela?",
-            style = MaterialTheme.typography.headlineSmall
-        )
+    val opciones = listOf(
+        "Muy bien 😄",
+        "Bien 🙂",
+        "A veces difícil 😐",
+        "Difícil 😟"
+    )
 
-        Spacer(modifier = Modifier.height(32.dp))
+    var indicePregunta by remember { mutableIntStateOf(0) }
+    var opcionSeleccionada by remember { mutableStateOf(opciones[0]) }
+    val progreso = (indicePregunta + 1).toFloat() / preguntas.size.toFloat()
 
-        Card(modifier = Modifier.fillMaxWidth())  {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(16.dp).fillMaxWidth()
-            ) {
-                RadioButton(selected = true, onClick = {})
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "Me siento feliz y tranquilo")
-            }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(
+                            text = "Cuestionario Escolar",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Sesión supervisada • Código temporal",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = Color.White
+                )
+            )
         }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(24.dp)
+        ) {
+            Text(
+                text = "Pregunta ${indicePregunta + 1} de ${preguntas.size}",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            LinearProgressIndicator(
+                progress = { progreso },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+            )
 
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(16.dp).fillMaxWidth()
-            ) {
-                RadioButton(selected = false, onClick = { })
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "Me siento normal")
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text(
+                text = preguntas[indicePregunta],
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            opciones.forEach { opcion ->
+                ElevatedCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp)
+                        .clickable { opcionSeleccionada = opcion }
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth()
+                    ) {
+                        RadioButton(
+                            selected = (opcionSeleccionada == opcion),
+                            onClick = { opcionSeleccionada = opcion }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = opcion,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
             }
-        }
 
+            Spacer(modifier = Modifier.weight(1f))
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(16.dp).fillMaxWidth()
+            Button(
+                onClick = {
+                    if (indicePregunta < preguntas.size - 1) {
+                        indicePregunta++
+                        opcionSeleccionada = opciones[0]
+                    } else {
+                        onFinalizar()
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
             ) {
-                RadioButton(selected = false, onClick = { })
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "Me siento triste o deprimido")
+                Text(
+                    text = if (indicePregunta < preguntas.size - 1) "Siguiente Pregunta" else "Finalizar y Enviar"
+                )
             }
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        Button (
-            onClick = onFinalizar,
-            modifier = Modifier.fillMaxWidth()
-        ){
-            Text(text = "Finalizar")
         }
     }
 }

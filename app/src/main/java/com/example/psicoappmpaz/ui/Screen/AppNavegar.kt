@@ -71,8 +71,19 @@ fun AppNavegar(
 
         // --- DASHBOARD PROFESOR ---
         composable("profesor_home/{nombreUsuario}") { backStackEntry ->
+            val nombreRaw = backStackEntry.arguments?.getString("nombreUsuario") ?: "Docente"
+            val nombreDecodificado = URLDecoder.decode(nombreRaw, StandardCharsets.UTF_8.toString())
+
             ProfesorHomeScreen(
-                onVolver = { navController.popBackStack() }
+                nombreUsuario = nombreDecodificado,
+                onIrAsistencia = { navController.navigate("asistencia/PROFESOR/$nombreRaw") },
+                onIrEvaluaciones = { navController.navigate("evaluaciones/PROFESOR/$nombreRaw") },
+                onIrPerfil = { navController.navigate("perfil/PROFESOR/$nombreRaw") },
+                onVolver = {
+                    navController.navigate("login") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
             )
         }
 

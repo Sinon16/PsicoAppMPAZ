@@ -3,6 +3,7 @@ package com.example.psicoappmpaz.ui.screen
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,6 +18,7 @@ fun LoginScreen(
     onLoginExitosoPsico: (String) -> Unit,
     onLoginExitosoProfe: (String) -> Unit,
     onIngresoEstudiante: () -> Unit,
+    onIrARegistro: () -> Unit,
     viewModel: LoginViewModel = viewModel()
 ) {
     Surface(
@@ -98,6 +100,32 @@ fun LoginScreen(
                         )
                     } else {
                         Text("Ingresar al Sistema PIE")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // enlace para registrar cuenta nueva
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "¿No tienes cuenta registrada?",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    TextButton(
+                            onClick = onIrARegistro,
+                    contentPadding = PaddingValues(start = 4.dp, end = 4.dp)
+                    ){
+                        Text(
+                            text = "Regístrate aquí",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             } else {

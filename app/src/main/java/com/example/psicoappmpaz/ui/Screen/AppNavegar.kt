@@ -38,6 +38,9 @@ fun AppNavegar(
                     navController.navigate("estudiante_home") {
                         popUpTo("login") { inclusive = true }
                     }
+                },
+                onIrARegistro = {
+                    navController.navigate("registrar_usuario")
                 }
             )
         }

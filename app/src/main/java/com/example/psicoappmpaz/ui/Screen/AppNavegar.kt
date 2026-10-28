@@ -41,6 +41,12 @@ fun AppNavegar(
                 }
             )
         }
+        // Ruta para registrar usuarios en la base de datos local
+        composable("registrar_usuario") {
+            RegistrarUsuarioScreen(
+                onVolver = { navController.popBackStack() }
+            )
+        }
 
         // --- DASHBOARD PSICÓLOGO ---
         composable("psico_home/{nombreUsuario}") { backStackEntry ->
@@ -111,7 +117,6 @@ fun AppNavegar(
                 },
                 onIrEvaluaciones = { navController.navigate("evaluaciones/$rol/$nombreRaw") },
                 onIrPerfil = { navController.navigate("perfil/$rol/$nombreRaw") },
-                onVolver = { navController.popBackStack() }
             )
         }
 
@@ -123,12 +128,19 @@ fun AppNavegar(
             EvaluacionesScreen(
                 rolUsuario = rol,
                 nombreUsuario = nombre,
+                onIrCrearEvaluacion = { navController.navigate("crear_evaluacion") },
                 onIrInicio = {
                     val destino = if (rol == "PROFESOR") "profesor_home/$nombreRaw" else "psico_home/$nombreRaw"
                     navController.navigate(destino) { popUpTo("login") { inclusive = false } }
                 },
                 onIrAsistencia = { navController.navigate("asistencia/$rol/$nombreRaw") },
                 onIrPerfil = { navController.navigate("perfil/$rol/$nombreRaw") },
+                onVolver = { navController.popBackStack() }
+            )
+        }
+
+        composable("crear_evaluacion") {
+            CrearEvaluacionScreen(
                 onVolver = { navController.popBackStack() }
             )
         }

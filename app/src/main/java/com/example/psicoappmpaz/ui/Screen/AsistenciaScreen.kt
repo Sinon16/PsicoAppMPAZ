@@ -27,8 +27,7 @@ fun AsistenciaScreen(
     nombreUsuario: String = "",
     onIrInicio: () -> Unit = {},
     onIrEvaluaciones: () -> Unit = {},
-    onIrPerfil: () -> Unit = {},
-    onVolver: () -> Unit = {}
+    onIrPerfil: () -> Unit = {}
 ){
     Scaffold(
         bottomBar = {

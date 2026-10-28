@@ -1,5 +1,9 @@
 package com.example.psicoappmpaz.ui.screen
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -17,7 +21,32 @@ fun AppNavegar(
     NavHost(
         navController = navController,
         startDestination = "login",
-        modifier = modifier
+        modifier = modifier,
+
+        enterTransition = {
+            slideIntoContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                animationSpec = tween(300)
+            ) + fadeIn(animationSpec = tween(300))
+        },
+        exitTransition = {
+            slideOutOfContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                animationSpec = tween(300)
+            ) + fadeOut(animationSpec = tween(300))
+        },
+        popEnterTransition = {
+            slideIntoContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                animationSpec = tween(300)
+            ) + fadeIn(animationSpec = tween(300))
+        },
+        popExitTransition = {
+            slideOutOfContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                animationSpec = tween(300)
+            ) + fadeOut(animationSpec = tween(300))
+        }
     ) {
         // --- PANTALLA DE LOGIN ---
         composable("login") {
@@ -45,7 +74,21 @@ fun AppNavegar(
             )
         }
         // Ruta para registrar usuarios en la base de datos local
-        composable("registrar_usuario") {
+        composable(
+            "registrar_usuario",
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Up,
+                    animationSpec = tween(350)
+                ) + fadeIn(animationSpec = tween(350))
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Down,
+                    animationSpec = tween(350)
+                ) + fadeOut(animationSpec = tween(350))
+            }
+        ) {
             RegistrarUsuarioScreen(
                 onVolver = { navController.popBackStack() }
             )
@@ -121,7 +164,11 @@ fun AppNavegar(
         }
 
         // --- RUTAS CON BARRA DE NAVEGACIÓN ---
-        composable("asistencia/{rolUsuario}/{nombreUsuario}") { backStackEntry ->
+        composable(
+            "asistencia/{rolUsuario}/{nombreUsuario}",
+            enterTransition = { fadeIn(animationSpec = tween(250)) },
+            exitTransition = { fadeOut(animationSpec = tween(250)) }
+            ) { backStackEntry ->
             val rol = backStackEntry.arguments?.getString("rolUsuario") ?: "PSICOLOGO"
             val nombreRaw = backStackEntry.arguments?.getString("nombreUsuario") ?: ""
             val nombre = URLDecoder.decode(nombreRaw, StandardCharsets.UTF_8.toString())
@@ -138,7 +185,11 @@ fun AppNavegar(
             )
         }
 
-        composable("evaluaciones/{rolUsuario}/{nombreUsuario}") { backStackEntry ->
+        composable(
+            "evaluaciones/{rolUsuario}/{nombreUsuario}",
+            enterTransition = { fadeIn(animationSpec = tween(250)) },
+            exitTransition = { fadeOut(animationSpec = tween(250)) }
+        ) { backStackEntry ->
             val rol = backStackEntry.arguments?.getString("rolUsuario") ?: "PSICOLOGO"
             val nombreRaw = backStackEntry.arguments?.getString("nombreUsuario") ?: ""
             val nombre = URLDecoder.decode(nombreRaw, StandardCharsets.UTF_8.toString())
@@ -157,13 +208,31 @@ fun AppNavegar(
             )
         }
 
-        composable("crear_evaluacion") {
+        composable(
+            "crear_evaluacion",
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Up,
+                    animationSpec = tween(350)
+                ) + fadeIn(animationSpec = tween(350))
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Down,
+                    animationSpec = tween(350)
+                ) + fadeOut(animationSpec = tween(350))
+            }
+        ) {
             CrearEvaluacionScreen(
                 onVolver = { navController.popBackStack() }
             )
         }
 
-        composable("perfil/{rolUsuario}/{nombreUsuario}") { backStackEntry ->
+        composable(
+            "perfil/{rolUsuario}/{nombreUsuario}",
+            enterTransition = { fadeIn(animationSpec = tween(250)) },
+            exitTransition = { fadeOut(animationSpec = tween(250)) }
+            ) { backStackEntry ->
             val rol = backStackEntry.arguments?.getString("rolUsuario") ?: "PSICOLOGO"
             val nombreRaw = backStackEntry.arguments?.getString("nombreUsuario") ?: ""
             val nombre = URLDecoder.decode(nombreRaw, StandardCharsets.UTF_8.toString())

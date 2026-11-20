@@ -14,37 +14,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.psicoappmpaz.data.models.CrearCuestionarioRequest
-import com.example.psicoappmpaz.data.models.CrearPreguntaRequest
-import com.example.psicoappmpaz.network.RetrofitClient
-import kotlinx.coroutines.launch
-
-data class PreguntaFormulario(
-    var textoPregunta: String = "",
-    var opcionSeleccionada: String = "Medio"
-)
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.psicoappmpaz.ui.viewmodel.CrearCuestionarioViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CrearEvaluacionScreen(
+    viewModel: CrearCuestionarioViewModel = viewModel(),
     onVolver: () -> Unit
 ) {
-    val scope = rememberCoroutineScope()
     val opcionesEscala = listOf("Muy bien", "Bien", "Medio", "Mal", "Muy mal")
 
-    var tituloEvaluacion by remember { mutableStateOf("") }
-    var descripcionEvaluacion by remember { mutableStateOf("") }
-    val listaPreguntas = remember { mutableStateListOf(PreguntaFormulario()) }
-
-    var cargando by remember { mutableStateOf(false) }
-    var mensajeError by remember { mutableStateOf<String?>(null) }
-    var fueGuardado by remember { mutableStateOf(false) }
-
-    if (fueGuardado) {
+    if (viewModel.fueGuardado) {
         AlertDialog(
             onDismissRequest = onVolver,
             title = { Text("Evaluación Guardada") },
-            text = { Text("El cuestionario '$tituloEvaluacion' con ${listaPreguntas.size} preguntas ya está disponible en el catálogo.") },
+            text = { Text("El cuestionario '${viewModel.tituloEvaluacion}' con ${viewModel.listaPreguntas.size} preguntas ya está disponible en el catálogo.") },
             confirmButton = {
                 Button(onClick = onVolver) {
                     Text("Aceptar")
@@ -91,23 +76,23 @@ fun CrearEvaluacionScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedTextField(
-                    value = tituloEvaluacion,
-                    onValueChange = { tituloEvaluacion = it },
+                    value = viewModel.tituloEvaluacion,
+                    onValueChange = { viewModel.tituloEvaluacion = it },
                     label = { Text("Nombre de la Evaluación") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    enabled = !cargando
+                    enabled = !viewModel.cargando
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedTextField(
-                    value = descripcionEvaluacion,
-                    onValueChange = { descripcionEvaluacion = it },
+                    value = viewModel.descripcionEvaluacion,
+                    onValueChange = { viewModel.descripcionEvaluacion = it },
                     label = { Text("Descripción u Objetivo") },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2,
-                    enabled = !cargando
+                    enabled = !viewModel.cargando
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -118,35 +103,29 @@ fun CrearEvaluacionScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Preguntas (${listaPreguntas.size})",
+                        text = "Preguntas (${viewModel.listaPreguntas.size})",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
 
                     OutlinedButton(
-                        onClick = { listaPreguntas.add(PreguntaFormulario()) },
-                        enabled = !cargando
+                        onClick = { viewModel.agregarPregunta() },
+                        enabled = !viewModel.cargando
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
+                        Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("Agregar pregunta")
                     }
                 }
             }
 
-            itemsIndexed(listaPreguntas) { index, pregunta ->
+            itemsIndexed(viewModel.listaPreguntas) { index, pregunta ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Row(
@@ -161,29 +140,25 @@ fun CrearEvaluacionScreen(
                                 color = MaterialTheme.colorScheme.primary
                             )
 
-                            if (listaPreguntas.size > 1) {
+                            if (viewModel.listaPreguntas.size > 1) {
                                 IconButton(
-                                    onClick = { listaPreguntas.removeAt(index) },
-                                    enabled = !cargando
+                                    onClick = { viewModel.eliminarPregunta(index) },
+                                    enabled = !viewModel.cargando
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "Eliminar",
-                                        tint = MaterialTheme.colorScheme.error
-                                    )
+                                    Icon(imageVector = Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
                                 }
                             }
                         }
 
                         OutlinedTextField(
-                            value = pregunta.textoPregunta,
+                            value = pregunta.enunciado,
                             onValueChange = { nuevoTexto ->
-                                listaPreguntas[index] = pregunta.copy(textoPregunta = nuevoTexto)
+                                viewModel.actualizarEnunciadoPregunta(index, nuevoTexto)
                             },
                             label = { Text("Enunciado de la pregunta") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            enabled = !cargando
+                            enabled = !viewModel.cargando
                         )
 
                         Text(
@@ -200,14 +175,9 @@ fun CrearEvaluacionScreen(
                                 ) {
                                     RadioButton(
                                         selected = (pregunta.opcionSeleccionada == opcion),
-                                        onClick = {
-                                            listaPreguntas[index] = pregunta.copy(opcionSeleccionada = opcion)
-                                        }
+                                        onClick = { /* Solo demostrativo en creación */ }
                                     )
-                                    Text(
-                                        text = opcion,
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
+                                    Text(text = opcion, style = MaterialTheme.typography.bodyMedium)
                                 }
                             }
                         }
@@ -216,59 +186,20 @@ fun CrearEvaluacionScreen(
             }
 
             item {
-                mensajeError?.let { err ->
-                    Text(
-                        text = err,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                viewModel.mensajeError?.let { err ->
+                    Text(text = err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
                 Button(
-                    onClick = {
-                        val token = RetrofitClient.getBearerToken()
-                        scope.launch {
-                            cargando = true
-                            mensajeError = null
-                            try {
-                                val preguntasDto = listaPreguntas.mapIndexed { idx, p ->
-                                    CrearPreguntaRequest(
-                                        textoPregunta = p.textoPregunta.trim(),
-                                        opcionesRespuesta = opcionesEscala.joinToString("|"),
-                                        orden = idx + 1
-                                    )
-                                }
-                                val request = CrearCuestionarioRequest(
-                                    titulo = tituloEvaluacion.trim(),
-                                    descripcion = descripcionEvaluacion.trim(),
-                                    preguntas = preguntasDto
-                                )
-                                val response = RetrofitClient.apiService.crearCuestionario(token, request)
-                                if (response.isSuccessful) {
-                                    fueGuardado = true
-                                } else {
-                                    mensajeError = "Error al guardar cuestionario (${response.code()})"
-                                }
-                            } catch (e: Exception) {
-                                mensajeError = "Error de conexión: ${e.localizedMessage}"
-                            } finally {
-                                cargando = false
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    enabled = tituloEvaluacion.isNotBlank() &&
-                            listaPreguntas.all { it.textoPregunta.isNotBlank() } &&
-                            !cargando
+                    onClick = { viewModel.guardarCuestionario() },
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    enabled = viewModel.tituloEvaluacion.isNotBlank() &&
+                            viewModel.listaPreguntas.all { it.enunciado.isNotBlank() } &&
+                            !viewModel.cargando
                 ) {
-                    if (cargando) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = Color.White
-                        )
+                    if (viewModel.cargando) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
                     } else {
                         Text("Guardar Evaluación", style = MaterialTheme.typography.titleMedium)
                     }

@@ -9,7 +9,8 @@ import retrofit2.converter.scalars.ScalarsConverterFactory
 object RetrofitClient {
 
     // 10.0.2.2 apunta al localhost de tu PC desde el emulador de Android Studio
-    private const val BASE_URL = "http://10.0.2.2:8081/"
+    private const val BASE_URL = "http://10.0.2.2:8080/"
+    // 127.0.0.1:8080 apunta al localhost de mi celular conectado al Android Studio
 
     // Almacén en memoria del JWT para compartirlo entre pantallas/ViewModels
     var authToken: String? = null

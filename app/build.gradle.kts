@@ -66,12 +66,20 @@ dependencies {
     ksp("androidx.room:room-compiler:2.8.1")
 
     // Red / Remoto / Sincronización (Retrofit & Gson)
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
 
     // Carga de imágenes (Coil)
     implementation("io.coil-kt:coil-compose:2.6.0")
 
     // Corrutinas
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+    // ViewModel en Jetpack Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+
+    // Interceptor para depurar peticiones HTTP en Logcat
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
 }

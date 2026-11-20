@@ -1,11 +1,18 @@
 package com.example.psicoappmpaz.model
 
+data class Pregunta(
+    val id: Long = 0L,
+    val enunciado: String,
+    val orden: Int = 0
+)
+
 data class Cuestionario(
-    val idCuestionario: Int = 0,
+    val id: Long = 0L,
     val titulo: String,
-    val tipo: String, // "Educativo" o "Psicométrico Simulado"
-    val rangoEdad: String,
-    val tiempoEstimadoMinutos: Int,
-    val instrucciones: String,
-    val estado: String = "Disponible"
+    val descripcion: String = "",
+    val instruccionesProfesor: String = "",
+    val especificacionesTecnicasPsicologo: String = "",
+    val rangoEdad: String = "",
+    val tiempoEstimadoMinutos: Int = 0,
+    val preguntas: List<Pregunta> = emptyList()
 )

@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Work
@@ -12,46 +12,42 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.example.psicoappmpaz.data.entity.UsuarioEntity
-import com.example.psicoappmpaz.data.local.AppDataBase
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.psicoappmpaz.ui.viewmodel.LoginViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistrarUsuarioScreen(
-    onVolver: () -> Unit
+    onVolver: () -> Unit,
+    viewModel: LoginViewModel = viewModel()
 ) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-
-    // Campos del formulario ajustados a UsuarioEntity
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var nombreCompleto by remember { mutableStateOf("") }
 
-    // Opciones de Rol estrictamente limitadas a PROFESOR y PSICOLOGO
     val rolesDisponibles = listOf("PROFESOR", "PSICOLOGO")
     var rolSeleccionado by remember { mutableStateOf(rolesDisponibles[0]) }
     var menuRolDesplegado by remember { mutableStateOf(false) }
 
-    // Estados de interfaz
-    var cargando by remember { mutableStateOf(false) }
-    var mensajeError by remember { mutableStateOf<String?>(null) }
     var registroExitoso by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.mensajeError = ""
+    }
 
     if (registroExitoso) {
         AlertDialog(
             onDismissRequest = { },
             title = { Text("Usuario Registrado") },
-            text = { Text("El usuario '$nombreCompleto' con el rol '$rolSeleccionado' ha sido guardado exitosamente en la base de datos.") },
+            text = { Text("El usuario '$nombreCompleto' con el rol '$rolSeleccionado' ha sido guardado exitosamente en el servidor.") },
             confirmButton = {
-                Button(onClick = onVolver) {
+                Button(onClick = {
+                    registroExitoso = false
+                    onVolver()
+                }) {
                     Text("Aceptar")
                 }
             }
@@ -65,7 +61,7 @@ fun RegistrarUsuarioScreen(
                 navigationIcon = {
                     IconButton(onClick = onVolver) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Volver",
                             tint = Color.White
                         )
@@ -93,27 +89,26 @@ fun RegistrarUsuarioScreen(
                 color = MaterialTheme.colorScheme.primary
             )
 
-            // 1. Username
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
                 label = { Text("Nombre de usuario (Username)") },
                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                enabled = !viewModel.cargando
             )
 
-            // 2. Nombre Completo
             OutlinedTextField(
                 value = nombreCompleto,
                 onValueChange = { nombreCompleto = it },
                 label = { Text("Nombre Completo") },
                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                enabled = !viewModel.cargando
             )
 
-            // 3. Password
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -121,10 +116,10 @@ fun RegistrarUsuarioScreen(
                 leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                enabled = !viewModel.cargando
             )
 
-            // 4. Selector de Rol (Exclusivo PROFESOR o PSICOLOGO)
             ExposedDropdownMenuBox(
                 expanded = menuRolDesplegado,
                 onExpandedChange = { menuRolDesplegado = !menuRolDesplegado }
@@ -157,9 +152,9 @@ fun RegistrarUsuarioScreen(
                 }
             }
 
-            mensajeError?.let { err ->
+            if (viewModel.mensajeError.isNotEmpty()) {
                 Text(
-                    text = err,
+                    text = viewModel.mensajeError,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -167,40 +162,22 @@ fun RegistrarUsuarioScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 5. Botón Guardar en SQLite vía Room
             Button(
                 onClick = {
-                    scope.launch {
-                        cargando = true
-                        mensajeError = null
-                        try {
-                            withContext(Dispatchers.IO) {
-                                val db = AppDataBase.obtenerBaseDatos(context)
-
-                                // Instanciamos la entidad exacta
-                                val nuevoUsuario = UsuarioEntity(
-                                    username = username.trim(),
-                                    password = password.trim(),
-                                    nombreCompleto = nombreCompleto.trim(),
-                                    rol = rolSeleccionado
-                                )
-
-                                db.usuarioDao().insertarUsuario(nuevoUsuario)
-                            }
-                            registroExitoso = true
-                        } catch (e: Exception) {
-                            mensajeError = "Error al guardar en la BD: ${e.localizedMessage}"
-                        } finally {
-                            cargando = false
-                        }
-                    }
+                    viewModel.registrarUsuario(
+                        username = username,
+                        password = password,
+                        nombreCompleto = nombreCompleto,
+                        rol = rolSeleccionado,
+                        onSuccess = { registroExitoso = true }
+                    )
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                enabled = username.isNotBlank() && nombreCompleto.isNotBlank() && password.isNotBlank() && !cargando
+                enabled = username.isNotBlank() && nombreCompleto.isNotBlank() && password.isNotBlank() && !viewModel.cargando
             ) {
-                if (cargando) {
+                if (viewModel.cargando) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         color = Color.White

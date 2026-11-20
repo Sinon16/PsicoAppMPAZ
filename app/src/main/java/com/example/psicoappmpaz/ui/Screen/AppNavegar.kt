@@ -6,9 +6,14 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.dialog
+import com.example.psicoappmpaz.network.RetrofitClient
+import com.example.psicoappmpaz.ui.viewmodel.LoginViewModel
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -18,6 +23,9 @@ fun AppNavegar(
     modifier: Modifier = Modifier,
     navController: NavHostController
 ) {
+    // ViewModel compartido para conservar los datos de sesión del estudiante entre pantallas
+    val loginViewModel: LoginViewModel = viewModel()
+
     NavHost(
         navController = navController,
         startDestination = "login",
@@ -51,6 +59,7 @@ fun AppNavegar(
         // --- PANTALLA DE LOGIN ---
         composable("login") {
             LoginScreen(
+                viewModel = loginViewModel,
                 onLoginExitosoPsico = { nombreUsuario ->
                     val nombreEncoded = URLEncoder.encode(nombreUsuario, StandardCharsets.UTF_8.toString())
                     navController.navigate("psico_home/$nombreEncoded") {
@@ -73,7 +82,8 @@ fun AppNavegar(
                 }
             )
         }
-        // Ruta para registrar usuarios en la base de datos local
+
+        // --- REGISTRO DE USUARIOS ---
         composable(
             "registrar_usuario",
             enterTransition = {
@@ -103,11 +113,11 @@ fun AppNavegar(
                 nombreUsuario = nombreDecodificado,
                 onCrearAplicacion = { navController.navigate("crear_aplicacion") },
                 onVerDetalle = { idApp -> navController.navigate("detalle_resultado/$idApp") },
-                // Construye correctamente las rutas con rol y el nombre codificado
                 onIrAsistencia = { navController.navigate("asistencia/PSICOLOGO/$nombreRaw") },
                 onIrEvaluaciones = { navController.navigate("evaluaciones/PSICOLOGO/$nombreRaw") },
                 onIrPerfil = { navController.navigate("perfil/PSICOLOGO/$nombreRaw") },
                 onCerrarSesion = {
+                    RetrofitClient.authToken = null
                     navController.navigate("login") {
                         popUpTo("login") { inclusive = true }
                     }
@@ -126,6 +136,7 @@ fun AppNavegar(
                 onIrEvaluaciones = { navController.navigate("evaluaciones/PROFESOR/$nombreRaw") },
                 onIrPerfil = { navController.navigate("perfil/PROFESOR/$nombreRaw") },
                 onVolver = {
+                    RetrofitClient.authToken = null
                     navController.navigate("login") {
                         popUpTo("login") { inclusive = true }
                     }
@@ -143,6 +154,8 @@ fun AppNavegar(
         composable("estudiante_test") {
             EstudianteTestScreen(
                 onFinalizar = {
+                    loginViewModel.aplicacionActivaEstudiante = null
+                    loginViewModel.codigoEstudiante = ""
                     navController.navigate("login") {
                         popUpTo("estudiante_home") { inclusive = true }
                     }
@@ -150,15 +163,20 @@ fun AppNavegar(
             )
         }
 
-        // --- MÓDULOS SECUNDARIOS ---
-        composable("crear_aplicacion") {
+        // --- MÓDULOS SECUNDARIOS (MINI PANTALLA FLOTANTE) ---
+        dialog(
+            route = "crear_aplicacion",
+            dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
             CrearAplicacionScreen(
                 onVolver = { navController.popBackStack() }
             )
         }
 
-        composable("detalle_resultado/{idApp}") {
+        composable("detalle_resultado/{idApp}") { backStackEntry ->
+            val idApp = backStackEntry.arguments?.getString("idApp")?.toLongOrNull() ?: 0L
             DetalleResultadoScreen(
+                idAplicacion = idApp,
                 onVolver = { navController.popBackStack() }
             )
         }
@@ -168,7 +186,7 @@ fun AppNavegar(
             "asistencia/{rolUsuario}/{nombreUsuario}",
             enterTransition = { fadeIn(animationSpec = tween(250)) },
             exitTransition = { fadeOut(animationSpec = tween(250)) }
-            ) { backStackEntry ->
+        ) { backStackEntry ->
             val rol = backStackEntry.arguments?.getString("rolUsuario") ?: "PSICOLOGO"
             val nombreRaw = backStackEntry.arguments?.getString("nombreUsuario") ?: ""
             val nombre = URLDecoder.decode(nombreRaw, StandardCharsets.UTF_8.toString())
@@ -198,6 +216,7 @@ fun AppNavegar(
                 rolUsuario = rol,
                 nombreUsuario = nombre,
                 onIrCrearEvaluacion = { navController.navigate("crear_evaluacion") },
+                onVerDetalle = { idApp -> navController.navigate("detalle_resultado/$idApp") },
                 onIrInicio = {
                     val destino = if (rol == "PROFESOR") "profesor_home/$nombreRaw" else "psico_home/$nombreRaw"
                     navController.navigate(destino) { popUpTo("login") { inclusive = false } }
@@ -232,7 +251,7 @@ fun AppNavegar(
             "perfil/{rolUsuario}/{nombreUsuario}",
             enterTransition = { fadeIn(animationSpec = tween(250)) },
             exitTransition = { fadeOut(animationSpec = tween(250)) }
-            ) { backStackEntry ->
+        ) { backStackEntry ->
             val rol = backStackEntry.arguments?.getString("rolUsuario") ?: "PSICOLOGO"
             val nombreRaw = backStackEntry.arguments?.getString("nombreUsuario") ?: ""
             val nombre = URLDecoder.decode(nombreRaw, StandardCharsets.UTF_8.toString())

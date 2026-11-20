@@ -12,7 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.psicoappmpaz.ui.components.AppBottomBar
+import com.example.psicoappmpaz.ui.viewmodel.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,8 +25,14 @@ fun PsicoHomeScreen(
     onIrAsistencia: () -> Unit,
     onIrEvaluaciones: () -> Unit,
     onIrPerfil: () -> Unit,
-    onCerrarSesion: () -> Unit
+    onCerrarSesion: () -> Unit,
+    viewModel: HomeViewModel = viewModel()
 ) {
+    // Cargar datos reales del backend al abrir la pantalla
+    LaunchedEffect(Unit) {
+        viewModel.cargarAplicaciones()
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -48,6 +56,13 @@ fun PsicoHomeScreen(
                     actionIconContentColor = Color.White
                 ),
                 actions = {
+                    IconButton(onClick = { viewModel.cargarAplicaciones() }) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Actualizar",
+                            tint = Color.White
+                        )
+                    }
                     IconButton(onClick = onIrAsistencia) {
                         Icon(
                             imageVector = Icons.Default.CalendarMonth,
@@ -104,7 +119,7 @@ fun PsicoHomeScreen(
                 )
             }
 
-            // 2. Tarjetas de Resumen
+            // 2. Tarjetas de Resumen Dinámicas
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -133,7 +148,7 @@ fun PsicoHomeScreen(
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "12",
+                                text = "${viewModel.totalEnCurso}",
                                 style = MaterialTheme.typography.headlineLarge,
                                 fontWeight = FontWeight.Bold
                             )
@@ -164,7 +179,7 @@ fun PsicoHomeScreen(
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "28",
+                                text = "${viewModel.totalCompletadas}",
                                 style = MaterialTheme.typography.headlineLarge,
                                 fontWeight = FontWeight.Bold
                             )
@@ -223,62 +238,71 @@ fun PsicoHomeScreen(
                 }
             }
 
-            // Lista de elementos recientes
-            items(listaEvaluacionesDemo) { eval ->
-                ElevatedCard(
-                    onClick = { onVerDetalle(eval.id) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+            if (viewModel.cargando && viewModel.aplicaciones.isEmpty()) {
+                item {
+                    Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+            } else if (viewModel.aplicaciones.isEmpty()) {
+                item {
+                    Text(
+                        text = viewModel.mensajeError ?: "No hay evaluaciones registradas aún.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                }
+            } else {
+                // Muestra las últimas 5 evaluaciones desde el backend (más recientes primero)
+                items(viewModel.aplicaciones.takeLast(5).reversed()) { app ->
+                    val tituloTest = app.cuestionario?.titulo ?: "Evaluación #${app.id}"
+                    val cursoEstudiante = app.estudiante?.curso ?: "Sin curso"
+                    val fechaMostrar = app.fechaFinalizacion?.take(10) ?: app.fechaInicio?.take(10) ?: "Reciente"
+                    val esCompletada = app.estado.equals("COMPLETADA", ignoreCase = true)
+
+                    ElevatedCard(
+                        onClick = { onVerDetalle(app.id.toInt()) },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = eval.test,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "${eval.curso} • ${eval.fecha}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.outline
-                            )
-                        }
-                        Surface(
-                            color = if (eval.estado == "Completada")
-                                MaterialTheme.colorScheme.primaryContainer
-                            else
-                                MaterialTheme.colorScheme.surfaceVariant,
-                            shape = MaterialTheme.shapes.small
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(
-                                text = eval.estado,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                style = MaterialTheme.typography.labelSmall
-                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "$tituloTest (${app.codigoTemporal})",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "$cursoEstudiante • $fechaMostrar",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.outline
+                                )
+                            }
+                            Surface(
+                                color = if (esCompletada)
+                                    MaterialTheme.colorScheme.primaryContainer
+                                else
+                                    MaterialTheme.colorScheme.surfaceVariant,
+                                shape = MaterialTheme.shapes.small
+                            ) {
+                                Text(
+                                    text = app.estado,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }
                         }
                     }
                 }
             }
+
+            item { Spacer(modifier = Modifier.height(8.dp)) }
         }
     }
 }
-
-private data class EvalDemo(
-    val id: Int,
-    val test: String,
-    val curso: String,
-    val fecha: String,
-    val estado: String
-)
-
-private val listaEvaluacionesDemo = listOf(
-    EvalDemo(118, "Evaluación de Lenguaje", "4° Básico A", "12 may. 2025", "En curso"),
-    EvalDemo(124, "Evaluación Socioemocional", "5° Básico B", "10 may. 2025", "Completada"),
-    EvalDemo(130, "Seguimiento Individual", "3° Básico A", "8 may. 2025", "En curso")
-)

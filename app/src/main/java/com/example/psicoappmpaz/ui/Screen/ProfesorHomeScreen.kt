@@ -249,7 +249,7 @@ fun ProfesorHomeScreen(
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "${alumno.curso} • ${alumno.detalleTecnico}",
+                                text = "${alumno.curso} - ${alumno.detalleTecnico}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.outline
                             )

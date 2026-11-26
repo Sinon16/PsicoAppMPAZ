@@ -1,5 +1,6 @@
 package com.example.psicoappmpaz.ui.screen
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MenuBook
@@ -8,15 +9,34 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.psicoappmpaz.ui.viewmodel.LoginViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EstudianteHomeScreen(
     onIniciarTest: () -> Unit = {}
 ) {
+    val activity = LocalContext.current as? ComponentActivity
+    val loginViewModel: LoginViewModel = if (activity != null) {
+        viewModel(viewModelStoreOwner = activity)
+    } else {
+        viewModel()
+    }
+
+    val aplicacion = loginViewModel.aplicacionActivaEstudiante
+    val nombreEstudiante = aplicacion?.estudiante?.nombre
+    val tituloCuestionario = aplicacion?.cuestionario?.titulo ?: "Cuestionario Escolar"
+    val descripcionCuestionario = aplicacion?.cuestionario?.descripcion
+        ?.takeIf { it.isNotBlank() }
+        ?: "Lee con calma cada pregunta y marca la opción que mejor te represente. No hay respuestas malas ni buenas."
+    val totalPreguntas = aplicacion?.cuestionario?.preguntas?.size ?: 0
+    val tiempoEstimado = aplicacion?.cuestionario?.tiempoEstimadoMinutos ?: 0
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -50,7 +70,7 @@ fun EstudianteHomeScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Bienvenido/a 👋",
+                text = if (!nombreEstudiante.isNullOrBlank()) "Hola, $nombreEstudiante 👋" else "Bienvenido/a 👋",
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -73,7 +93,7 @@ fun EstudianteHomeScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Cuestionario de Convivencia Escolar",
+                            text = tituloCuestionario,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -86,9 +106,34 @@ fun EstudianteHomeScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Lee con calma cada pregunta y marca la opción que mejor te represente. No hay respuestas malas ni buenas.",
+                        text = descripcionCuestionario,
                         style = MaterialTheme.typography.bodyMedium
                     )
+
+                    if (totalPreguntas > 0 || tiempoEstimado > 0) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        HorizontalDivider()
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            if (totalPreguntas > 0) {
+                                Text(
+                                    text = "Preguntas: $totalPreguntas",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.outline
+                                )
+                            }
+                            if (tiempoEstimado > 0) {
+                                Text(
+                                    text = "Tiempo estimado: $tiempoEstimado min",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.outline
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
